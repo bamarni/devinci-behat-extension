@@ -6,7 +6,7 @@ use Behat\MinkExtension\Context\RawMinkContext;
 use Behat\Behat\Hook\Scope\BeforeStepScope;
 use Behat\Behat\Hook\Scope\AfterStepScope;
 use Behat\Behat\Hook\Scope\BeforeScenarioScope;
-use Behat\Mink\Driver\Selenium2Driver as Selenium2Driver;
+use Behat\Mink\Exception\UnsupportedDriverActionException;
 
 /**
  * Defines application features from the specific context.
@@ -124,27 +124,26 @@ class DebugContext extends RawMinkContext {
   }
 
   /**
-   * @Given grab a screenshot
-   * @Given grab a screenshot with a filename :filename
+   * @Given I grab a screenshot
+   * @Given I grab a screenshot with a filename :filename
    */
   public function grabScreenshot($filename = null) {
-    // Only Selenium2 driver supports screenshots.
     if (!$filename) {
       $filename = $this->lastStep->getText();
     }
-    $driver = $this->getSession()->getDriver();
-    if ($driver instanceof Selenium2Driver) {
-      $screenshot = $driver->getScreenshot();
-      $this->dumpAsset('screenshot', $this->lastStep->getText(), 'png', $screenshot);
+
+    try {
+      $screenshot = $this->getSession()->getDriver()->getScreenshot();
+    } catch (UnsupportedDriverActionException $e) {
+      return;
     }
-    else {
-     print "Only a Selenium2Driver supports screenshots.";
-    }
+
+    $this->dumpAsset('screenshot', $filename, 'png', $screenshot);
   }
 
   /**
-   * @Given grab the html
-   * @Given grab the html with a filename :filename
+   * @Given I grab the html
+   * @Given I grab the html with a filename :filename
    */
   public function grabHtml($filename = null) {
     if (!$filename) {
